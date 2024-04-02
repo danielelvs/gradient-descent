@@ -2,6 +2,8 @@ import os
 import numpy as np
 from sklearn.datasets import fetch_openml # para baixar o dataset do scikit-learn
 from sklearn.model_selection import train_test_split # para dividir o dataset para ser treinado
+from sklearn.metrics import confusion_matrix, classification_report, ConfusionMatrixDisplay
+
 import matplotlib.pyplot as plt
 
 # Imagem é altura x largura x 3 (rgb) = isso é o tamanho da imagem
@@ -83,12 +85,12 @@ class Gradient:
     """
       Exibe exemplos do dataset, mostrando alguns exemplos das imagens treinadas por cada classe (rótulo).
 
-      Aqui é exibido 5 classes por 5 exemplos/variações
+      Aqui é exibido 10 classes por 10 exemplos/variações
     """
 
-    classes = [c for c in range(5)] # loop inline. Atribui c a classes seguido do for sobre o tamanho 5
+    classes = [c for c in range(10)] # loop inline. Atribui c a classes seguido do for sobre o tamanho 10
     qtde_colunas = len(classes)
-    qtde_linhas = 5
+    qtde_linhas = 10
 
     for c in classes:
       # retornará os rótulos de y iguais a classe corrente em um array
@@ -149,6 +151,41 @@ class Gradient:
 
     return loss
 
+  def previsoes(self, W):
+    scores = self.X_teste.dot(W)
+    classes_previstas = np.argmax(scores, axis=1)
+    return classes_previstas
+
+  def gera_plot_classificacao(self, yPrevisao):
+    labels = [classes for classes in range(10)]
+    calculo_relatorio = confusion_matrix(self.y_teste, yPrevisao)
+    dados = confusion_matrix(self.y_teste, yPrevisao, labels=labels)
+    display = ConfusionMatrixDisplay(confusion_matrix=dados, display_labels=labels)
+    display.plot()
+
+    relatorio = classification_report(self.y_teste, yPrevisao, target_names=[str(label) for label in range(10)])
+    print(f'\nRelatório da Classificação: \n {relatorio}')
+
+    plt.show()
+
+  def gera_plot_reshape(self, melhorW):
+    W_reshaped = melhorW.reshape(28, 28, -1)
+    fig, ax = plt.subplots(2, 5, figsize=(10, 5))
+
+    for i in range(10):
+      valor_ax = ax[i // 5, i % 5]
+      valor_ax.imshow(W_reshaped[:, :, 1], cmap='bone')
+      valor_ax.axis("off")
+      valor_ax.set_title(f"{i}")
+
+    plt.show()
+
+
+
+
+
+
+
   def treinamento(self):
     qtde_interacoes = 30 # épocas?
     qtde_classes = 10
@@ -176,14 +213,29 @@ class Gradient:
 
     #####
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(historico_loss, label='Loss')
-    plt.plot(historico_melhor_loss, 'r--', label="Melhor Loss")
-    plt.xlabel('Interações')
-    plt.ylabel('Loss')
-    plt.title('Loss vs. Interações')
-    plt.legend()
-    plt.show()
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(historico_loss, label='Loss')
+    # plt.plot(historico_melhor_loss, 'r--', label="Melhor Loss")
+    # plt.xlabel('Interações')
+    # plt.ylabel('Loss')
+    # plt.title('Loss vs. Interações')
+    # plt.legend()
+    # plt.show()
+
+    #####
+
+    previsao_y = self.previsoes(melhor_W)
+    print(f"Previsão vs. Rótulos corretas: \n {previsao_y} \n {self.y_teste}")
+
+    #####
+
+    # self.gera_plot_classificacao(previsao_y)
+
+    #####
+
+    self.gera_plot_reshape(melhor_W)
+
+
 
 
 def main():
